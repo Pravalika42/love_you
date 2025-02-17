@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Love Music Player</title>
+    <style>
+        body {
+            text-align: center;
+            background-color: #ffebf0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+        .heart-animation {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ff4d6d;
+            clip-path: polygon(-43% 0,50% 91%, 143% 0);
+            animation: floatUp 5s linear infinite;
+            opacity: 0;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) scale(0.5); opacity: 1; }
+            100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+        }
+        .music-box {
+            width: 90%;
+            max-width: 300px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+        .album-cover {
+            width: 100%;
+            height: 300px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 10px;
+            transition: opacity 1s ease-in-out;
+            opacity: 0;
+        }
+        .album-cover.visible { opacity: 1; }
+        .song-title {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 5px;
+            background: #ddd;
+            margin-top: 15px;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            width: 0%;
+            background: #ff4d6d;
+            border-radius: 5px;
+            position: relative;
+        }
+        .hidden {
+            display: none;
+        }
+        .input-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .input-container input {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ff4d6d;
+            border-radius: 5px;
+            outline: none;
+            width: 200px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .input-container button {
+            background-color: #ff4d6d;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .input-container button:hover {
+            background-color: #d63384;
+        }
+        .heart {
+            width: 15px;
+            height: 15px;
+            background-color: #ff4d6d;
+            position: absolute;
+            top: -5px;
+            left: 0;
+            clip-path: polygon(50% 0%, 100% 35%, 80% 100%, 50% 80%, 20% 100%, 0% 35%);
+        }
+        .controls {
+            margin-top: 15px;
+        }
+        .play-icon {
+            width: 50px;
+            height: 50px;
+            background-color: #ff4d6d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .play-icon::after {
+            content: '\25B6';
+            font-size: 24px;
+            color: white;
+        }
+        .playing .play-icon::after { content: '\2759\2759'; } /* Pause icon */
+        .message {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff4d6d;
+        }
+        @media (max-width: 600px) {
+            .music-box { width: 95%; height: auto; padding: 15px; }
+            .song-title { font-size: 14px; }
+            .play-icon { width: 40px; height: 40px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="input-container">
+        <input type="text" id="giftInput" placeholder="What did I ask as a gift?">
+        <button onclick="checkGift()">Submit</button>
+    </div>
+    <audio id="bg-music" loop>
+        <source src="music/OOR NADUVINIL OR THERUVINIL  SONG WHATSAPP STATUS.mp3" type="audio/mpeg">
+    </audio>
+    <div id="surpriseContent" class="hidden">
+    <div class="music-box" id="musicBox">
+        <div class="album-cover" id="albumCover"></div>
+        <div class="song-title">Sunil ❤️ Pravalika</div>
+        <div class="valentine-message">Happy Valentine's Day! 💖</div>
+        <div class="progress-bar">
+            <div class="progress" id="progress">
+                <div class="heart" id="heart"></div>
+            </div>
+        </div>
+        <div class="controls">
+            <div class="play-icon" onclick="toggleMusic()"></div>
+        </div>
+    </div>
+
+    <div class="message">I love you always and forever ❤️</div>
+    </div>
+    <script>
+        let isPlaying = false;
+        const music = document.getElementById('bg-music');
+        const musicBox = document.getElementById('musicBox');
+        const progress = document.getElementById('progress');
+        const heart = document.getElementById('heart');
+        const albumCover = document.getElementById('albumCover');
+        let imageInterval = null;
+
+        const images = [
+            'img/1.png', 'img/2.jpg', 'img/3.jpg', 'img/4.jpg',
+            'img/5.jpg', 'img/6.png', 'img/7.png', 'img/8.png',
+            'img/9.jpg', 'img/10.jpg', 'img/11.jpg', 'img/12.png'
+        ];
+        let currentImageIndex = 0;
+
+        function changeImage() {
+            albumCover.classList.remove('visible');
+            setTimeout(() => {
+                albumCover.style.backgroundImage = `url(${images[currentImageIndex]})`;
+                albumCover.classList.add('visible');
+                currentImageIndex = (currentImageIndex + 1) % images.length;
+            }, 1000);
+        }
+
+        function startImageSlideshow() {
+            if (!imageInterval) {
+                imageInterval = setInterval(changeImage, 2800);
+                changeImage();
+            }
+        }
+
+        function stopImageSlideshow() {
+            clearInterval(imageInterval);
+            imageInterval = null;
+        }
+
+        function createHeart() {
+            if (!isPlaying) return; // Generate floating hearts only when playing
+            const heart = document.createElement('div');
+            heart.classList.add('heart-animation');
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = Math.random() * 3 + 2 + 's';
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), 5000);
+        }
+        setInterval(createHeart, 500);
+
+        function toggleMusic() {
+            if (isPlaying) {
+                music.pause();
+                musicBox.classList.remove('playing');
+                stopImageSlideshow();
+            } else {
+                music.play();
+                musicBox.classList.add('playing');
+                startImageSlideshow();
+            }
+            isPlaying = !isPlaying;
+        }
+        
+        function checkGift() {
+            const correctAnswer = "chocolate"; // Change this to your desired answer
+            const userInput = document.getElementById("giftInput").value.toLowerCase();
+            if (userInput === correctAnswer) {
+                document.getElementById("surpriseContent").classList.remove("hidden");
+                document.querySelector(".input-container").style.display = "none";
+            } else {
+                alert("Wrong answer! Try again.");
+            }
+        }
+   
+        music.addEventListener('timeupdate', () => {
+            const percent = (music.currentTime / music.duration) * 100;
+            progress.style.width = percent + '%';
+            heart.style.left = percent + '%';
+        });
+    </script>
+</body>
+</html>
